@@ -1,9 +1,24 @@
 {
-  "port": 8030,
+  "port": 8031,
   "model_to_port": {
-    "unmask_75": 8006,
-    "unsloth/Qwen2.5-7B-Instruct": 8006
+    "unsloth/Qwen2.5-7B-Instruct": 8010,
+    "unmask_75": 8010,
+
+    "unsloth/Qwen2.5-3B-Instruct": 8011,
+    "read_file": 8011,
+    "read_text_file": 8011,
+    "read_multiple_files": 8011,
+    "write_file": 8011,
+    "edit_file": 8011,
+    "create_directory": 8011,
+    "directory_tree": 8011,
+    "move_file": 8011,
+    "get_file_info": 8011,
+    "list_directory": 8011,
+    "list_directory_with_sizes": 8011,
+    "search_files": 8011
   },
+  "classifier_name": "unmask_75",
   "tool_cap": [
     {
       "function": {
@@ -781,5 +796,6 @@
         }
       }
     }
-  ]
+  ],
+  "rena_log_path": "log/test.jsonl"
 }
