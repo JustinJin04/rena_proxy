@@ -1,0 +1,785 @@
+{
+  "port": 8030,
+  "model_to_port": {
+    "unmask_75": 8005,
+    "unsloth/Qwen2.5-7B-Instruct": 8005
+  },
+  "tool_cap": [
+    {
+      "function": {
+        "description": "Read the complete contents of a file from the file system. Handles various text encodings and provides detailed error messages if the file cannot be read. Use this tool when you need to examine the contents of a single file. Use the 'head' parameter to read only the first N lines of a file, or the 'tail' parameter to read only the last N lines of a file. Only works within allowed directories.",
+        "name": "read_file",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "head": {
+              "description": "If provided, returns only the first N lines of the file",
+              "type": "number"
+            },
+            "path": {
+              "type": "string"
+            },
+            "tail": {
+              "description": "If provided, returns only the last N lines of the file",
+              "type": "number"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["read", "examine"],
+          "targets": ["file", "contents", "single file"],
+          "features": [
+            "complete contents reading",
+            "partial reading with head/tail",
+            "handles various text encodings",
+            "detailed error messages"
+          ],
+          "constraints": ["single file only", "allowed directories only"],
+          "parameters": {
+            "required": ["path"],
+            "optional": ["head", "tail"],
+            "parameter_purposes": {
+              "path": "file location",
+              "head": "first N lines",
+              "tail": "last N lines"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "read complete file contents",
+            "read first N lines",
+            "read last N lines",
+            "handle text encodings",
+            "provide error details",
+            "examine single files"
+          ],
+          "cannot_do": [
+            "read multiple files at once",
+            "search within content",
+            "modify content",
+            "filter by patterns",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "viewing complete files",
+            "previewing file starts/ends",
+            "reading configuration files",
+            "examining logs"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Read the contents of multiple files simultaneously. This is more efficient than reading files one by one when you need to analyze or compare multiple files. Each file's content is returned with its path as a reference. Failed reads for individual files won't stop the entire operation. Only works within allowed directories.",
+        "name": "read_multiple_files",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "paths": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "paths"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["read", "analyze", "compare"],
+          "targets": ["multiple files", "files simultaneously"],
+          "features": [
+            "simultaneous reading",
+            "more efficient than sequential",
+            "returns content with path reference",
+            "continues on individual failures"
+          ],
+          "constraints": ["allowed directories only"],
+          "parameters": {
+            "required": ["paths"],
+            "optional": [],
+            "parameter_purposes": {
+              "paths": "array of file paths"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "read multiple files simultaneously",
+            "analyze multiple files together",
+            "compare file contents",
+            "handle partial failures",
+            "return path-referenced content",
+            "improve efficiency over sequential reads"
+          ],
+          "cannot_do": [
+            "read partial files (no head/tail)",
+            "filter content",
+            "search within files",
+            "modify content",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "comparing multiple files",
+            "batch analysis",
+            "cross-file operations",
+            "efficient multi-file reading"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Create a new file or completely overwrite an existing file with new content. Use with caution as it will overwrite existing files without warning. Handles text content with proper encoding. Only works within allowed directories.",
+        "name": "write_file",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["create", "overwrite"],
+          "targets": ["new file", "existing file"],
+          "features": [
+            "create new files",
+            "completely overwrite existing",
+            "handles text encoding",
+            "no warning on overwrite"
+          ],
+          "constraints": ["allowed directories only", "complete overwrite only"],
+          "parameters": {
+            "required": ["path", "content"],
+            "optional": [],
+            "parameter_purposes": {
+              "path": "file location",
+              "content": "complete new content"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "create new files",
+            "completely replace file content",
+            "handle text encoding properly",
+            "write to any allowed path"
+          ],
+          "cannot_do": [
+            "append to existing files",
+            "make partial edits",
+            "preserve any existing content",
+            "provide overwrite warnings",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "creating new files",
+            "complete file replacement",
+            "generating fresh content",
+            "saving new data"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Make line-based edits to a text file. Each edit replaces exact line sequences with new content. Returns a git-style diff showing the changes made. Only works within allowed directories.",
+        "name": "edit_file",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "dryRun": {
+              "default": false,
+              "description": "Preview changes using git-style diff format",
+              "type": "boolean"
+            },
+            "edits": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "newText": {
+                    "description": "Text to replace with",
+                    "type": "string"
+                  },
+                  "oldText": {
+                    "description": "Text to search for - must match exactly",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "oldText",
+                  "newText"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "edits"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["edit", "replace"],
+          "targets": ["text file", "line sequences"],
+          "features": [
+            "line-based editing",
+            "exact sequence replacement",
+            "git-style diff output",
+            "preview with dryRun"
+          ],
+          "constraints": ["exact matching required", "allowed directories only"],
+          "parameters": {
+            "required": ["path", "edits"],
+            "optional": ["dryRun"],
+            "parameter_purposes": {
+              "path": "file to edit",
+              "edits": "array of oldText/newText pairs",
+              "dryRun": "preview changes without applying"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "make line-based edits",
+            "replace exact text sequences",
+            "preview changes before applying",
+            "return git-style diffs",
+            "make multiple edits at once",
+            "preserve surrounding content"
+          ],
+          "cannot_do": [
+            "use regex patterns",
+            "fuzzy matching",
+            "append without exact match",
+            "edit binary files",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "targeted text replacement",
+            "configuration updates",
+            "code modifications",
+            "preserving file structure"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories.",
+        "name": "create_directory",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["create", "ensure exists"],
+          "targets": ["directory", "nested directories", "directory structures"],
+          "features": [
+            "create single directory",
+            "create nested directories",
+            "silent success if exists",
+            "project structure setup"
+          ],
+          "constraints": ["allowed directories only"],
+          "parameters": {
+            "required": ["path"],
+            "optional": [],
+            "parameter_purposes": {
+              "path": "directory path to create"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "create new directories",
+            "create nested directory structures",
+            "ensure directories exist",
+            "succeed silently if exists",
+            "set up project structures"
+          ],
+          "cannot_do": [
+            "create files",
+            "copy directories",
+            "delete directories",
+            "set permissions",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "project setup",
+            "ensuring paths exist",
+            "creating output directories",
+            "organizing structures"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is essential for understanding directory structure and finding specific files within a directory. Only works within allowed directories.",
+        "name": "list_directory",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["list", "get listing"],
+          "targets": ["files and directories", "specified path"],
+          "features": [
+            "detailed listing",
+            "distinguish files from directories",
+            "[FILE] and [DIR] prefixes",
+            "understand structure"
+          ],
+          "constraints": ["single directory", "allowed directories only"],
+          "parameters": {
+            "required": ["path"],
+            "optional": [],
+            "parameter_purposes": {
+              "path": "directory to list"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "list directory contents",
+            "distinguish files from directories",
+            "show all items in path",
+            "understand directory structure",
+            "find files within directory"
+          ],
+          "cannot_do": [
+            "show file sizes",
+            "recursive listing",
+            "filter results",
+            "sort results",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "exploring directory contents",
+            "basic directory browsing",
+            "understanding structure",
+            "finding specific files"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Get a detailed listing of all files and directories in a specified path, including sizes. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. This tool is useful for understanding directory structure and finding specific files within a directory. Only works within allowed directories.",
+        "name": "list_directory_with_sizes",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sortBy": {
+              "default": "name",
+              "description": "Sort entries by name or size",
+              "enum": [
+                "name",
+                "size"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["list", "get listing with sizes"],
+          "targets": ["files and directories", "specified path"],
+          "features": [
+            "detailed listing with sizes",
+            "distinguish files from directories",
+            "[FILE] and [DIR] prefixes",
+            "sort by name or size"
+          ],
+          "constraints": ["single directory", "allowed directories only"],
+          "parameters": {
+            "required": ["path"],
+            "optional": ["sortBy"],
+            "parameter_purposes": {
+              "path": "directory to list",
+              "sortBy": "sort by 'name' or 'size'"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "list directory with sizes",
+            "sort by name or size",
+            "distinguish files from directories",
+            "show size information",
+            "identify large files"
+          ],
+          "cannot_do": [
+            "recursive listing",
+            "filter by size threshold",
+            "search by pattern",
+            "aggregate sizes",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "finding large files",
+            "disk space analysis",
+            "size-based sorting",
+            "storage management"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Get a recursive tree view of files and directories as a JSON structure. Each entry includes 'name', 'type' (file/directory), and 'children' for directories. Files have no children array, while directories always have a children array (which may be empty). The output is formatted with 2-space indentation for readability. Only works within allowed directories.",
+        "name": "directory_tree",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["get tree view", "recursive view"],
+          "targets": ["files and directories", "complete hierarchy"],
+          "features": [
+            "recursive traversal",
+            "JSON structure output",
+            "includes name and type",
+            "children arrays for directories",
+            "2-space indentation"
+          ],
+          "constraints": ["allowed directories only"],
+          "parameters": {
+            "required": ["path"],
+            "optional": [],
+            "parameter_purposes": {
+              "path": "root directory for tree"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "show complete hierarchy",
+            "recursive directory traversal",
+            "output JSON structure",
+            "show nested relationships",
+            "include all subdirectories"
+          ],
+          "cannot_do": [
+            "show file sizes",
+            "filter results",
+            "limit depth",
+            "search within tree",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "visualizing project structure",
+            "understanding deep hierarchies",
+            "documenting structure",
+            "complete overview"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Move or rename files and directories. Can move files between directories and rename them in a single operation. If the destination exists, the operation will fail. Works across different directories and can be used for simple renaming within the same directory. Both source and destination must be within allowed directories.",
+        "name": "move_file",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "destination": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "source",
+            "destination"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["move", "rename"],
+          "targets": ["files", "directories"],
+          "features": [
+            "move between directories",
+            "rename in place",
+            "move and rename combined",
+            "fails if destination exists"
+          ],
+          "constraints": ["destination must not exist", "both paths in allowed directories"],
+          "parameters": {
+            "required": ["source", "destination"],
+            "optional": [],
+            "parameter_purposes": {
+              "source": "current location",
+              "destination": "new location or name"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "move files between directories",
+            "rename files or directories",
+            "combine move and rename",
+            "work with files and directories"
+          ],
+          "cannot_do": [
+            "overwrite existing destination",
+            "copy instead of move",
+            "batch operations",
+            "merge directories",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "file reorganization",
+            "renaming operations",
+            "directory restructuring",
+            "archiving files"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Recursively search for files and directories matching a pattern. Searches through all subdirectories from the starting path. The search is case-insensitive and matches partial names. Returns full paths to all matching items. Great for finding files when you don't know their exact location. Only searches within allowed directories.",
+        "name": "search_files",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "excludePatterns": {
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pattern": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "pattern"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["search", "find"],
+          "targets": ["files and directories", "matching pattern"],
+          "features": [
+            "recursive search",
+            "case-insensitive",
+            "partial name matching",
+            "returns full paths",
+            "exclude patterns support"
+          ],
+          "constraints": ["name-based only", "allowed directories only"],
+          "parameters": {
+            "required": ["path", "pattern"],
+            "optional": ["excludePatterns"],
+            "parameter_purposes": {
+              "path": "starting directory",
+              "pattern": "search pattern",
+              "excludePatterns": "patterns to exclude"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "recursive pattern search",
+            "case-insensitive matching",
+            "partial name matching",
+            "search all subdirectories",
+            "exclude certain patterns",
+            "find files by name pattern"
+          ],
+          "cannot_do": [
+            "search by file size",
+            "search by content",
+            "search by date modified",
+            "limit search depth",
+            "search by file type beyond name"
+          ],
+          "best_for": [
+            "finding files by name",
+            "locating files in deep hierarchies",
+            "pattern-based discovery",
+            "finding lost files"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Retrieve detailed metadata about a file or directory. Returns comprehensive information including size, creation time, last modified time, permissions, and type. This tool is perfect for understanding file characteristics without reading the actual content. Only works within allowed directories.",
+        "name": "get_file_info",
+        "parameters": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["retrieve metadata", "get information"],
+          "targets": ["file or directory", "single item"],
+          "features": [
+            "comprehensive metadata",
+            "size information",
+            "timestamps (creation, modified)",
+            "permissions",
+            "type identification"
+          ],
+          "constraints": ["single item only", "allowed directories only"],
+          "parameters": {
+            "required": ["path"],
+            "optional": [],
+            "parameter_purposes": {
+              "path": "file or directory to inspect"
+            }
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "get file/directory metadata",
+            "retrieve size information",
+            "check timestamps",
+            "view permissions",
+            "identify item type",
+            "understand file characteristics"
+          ],
+          "cannot_do": [
+            "get multiple items info",
+            "read file content",
+            "modify metadata",
+            "search for files",
+            "work outside allowed directories"
+          ],
+          "best_for": [
+            "checking file properties",
+            "verifying timestamps",
+            "size inspection",
+            "metadata analysis"
+          ]
+        }
+      }
+    },
+    {
+      "function": {
+        "description": "Returns the list of directories that this server is allowed to access. Use this to understand which directories are available before trying to access files.",
+        "name": "list_allowed_directories",
+        "parameters": {
+          "properties": {},
+          "required": [],
+          "type": "object"
+        },
+        "extracted_capabilities": {
+          "primary_actions": ["list", "returns"],
+          "targets": ["allowed directories", "accessible directories"],
+          "features": [
+            "show access boundaries",
+            "list available directories",
+            "understand permissions"
+          ],
+          "constraints": ["read-only information"],
+          "parameters": {
+            "required": [],
+            "optional": [],
+            "parameter_purposes": {}
+          }
+        },
+        "derived_capabilities": {
+          "can_do": [
+            "list allowed directories",
+            "show access boundaries",
+            "verify available paths",
+            "understand workspace limits"
+          ],
+          "cannot_do": [
+            "modify access rights",
+            "request new permissions",
+            "access unlisted directories",
+            "check subdirectory permissions"
+          ],
+          "best_for": [
+            "initial exploration",
+            "understanding boundaries",
+            "verifying access",
+            "debugging permission issues"
+          ]
+        }
+      }
+    }
+  ]
+}
