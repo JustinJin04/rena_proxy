@@ -5,7 +5,8 @@ import httpx
 import traceback
 import uvicorn
 from dataclasses import dataclass
-
+from collections import defaultdict
+from math import inf
 
 @dataclass
 class ProxyConfig:
@@ -28,6 +29,47 @@ config = ProxyConfig.load_from_file("config.json")
 app = fastapi.FastAPI()
 
 
+def handle_response(response: dict) -> dict:
+
+    def extract_tool_name_from_content(content: str) -> str:
+        if "<tool_call>" in content and "</tool_call>" in content:
+            start = content.index("<tool_call>") + len("<tool_call>")
+            end = content.index("</tool_call>")
+            return json.loads(content[start:end])["name"]
+        return ""
+    
+    tool_calls = []
+    for choice in response.get("choices", []):
+        if choice.get("message").get("tool_calls"):
+            tool_calls.append(choice["message"]["tool_calls"][0]["function"]["name"])
+        else:
+            tool_calls.append(extract_tool_name_from_content(choice["message"].get("content", "")))
+
+    counts = defaultdict(int)
+    first_pos = {}
+
+    for i, name in enumerate(tool_calls):
+        counts[name] += 1
+        if name not in first_pos:
+            first_pos[name] = i  # remember first appearance
+
+    most_tool, most_count, earliest = None, 0, inf
+    for name, cnt in counts.items():
+        pos = first_pos[name]
+        if cnt > most_count or (cnt == most_count and pos < earliest):
+            most_tool, most_count, earliest = name, cnt, pos
+    
+    classifier_response_json = {"name": most_tool}
+    response["choices"] = [{
+        "index": 0,
+        "message": {
+            "role": "assistant",
+            "content": f"<tool_call>\n{json.dumps(classifier_response_json)}\n</tool_call>",
+        }
+    }]
+    return response
+
+
 @app.post("/proxy/chat/completions")
 async def chat_completions(request: fastapi.Request):
     try:
@@ -42,9 +84,13 @@ async def chat_completions(request: fastapi.Request):
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(engine_url, json=payload)
         
+        # Modify the choices of resonses
+        response_json = response.json()
+        response_json = handle_response(response_json)
+        
         return fastapi.responses.JSONResponse(
             status_code=response.status_code,
-            content=response.json()
+            content=response_json
         )
     except Exception as e:
         traceback.print_exc()
