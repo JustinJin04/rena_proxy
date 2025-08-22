@@ -49,7 +49,7 @@ class Proxier:
         return await self.tool_adaptor.adapt(req_payload, tool_name)
     
     def _register_routes(self):
-        @self.app.post("/proxy/chat/completions")
+        @self.app.post("/v1/chat/completions")
         async def chat_completions(request: fastapi.Request):
             try:
                 raw_req_payload = await request.json()
@@ -64,6 +64,7 @@ class Proxier:
                     content=response.json()
                 )
             except Exception as e:
+                logger.error(f"Error when processing request: {json.dumps(raw_req_payload)}")
                 traceback.print_exc()
                 return fastapi.responses.JSONResponse(
                     status_code=500, content={"error": str(e)}

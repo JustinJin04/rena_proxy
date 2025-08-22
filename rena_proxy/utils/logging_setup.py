@@ -18,3 +18,10 @@ def setup_logging(log_file_path: str):
 
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
+
+    # Suppress noisy third-party INFO logs (e.g., httpx request lines)
+    for noisy_logger in ("httpx", "httpcore"):
+        nl = logging.getLogger(noisy_logger)
+        nl.setLevel(logging.WARNING)
+        # Optionally prevent propagation if upstream handlers are very permissive
+        # nl.propagate = False

@@ -50,5 +50,9 @@
   "summarize": {
     "model": "unsloth/Qwen2.5-3B-Instruct",
     "port": 8011
+  },
+  "list_allowed_directories": {
+    "model": null,
+    "port": null
   }
 }

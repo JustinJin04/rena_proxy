@@ -17,8 +17,29 @@ class FinetunedToolAdaptor(ToolAdaptor):
 
     async def adapt(self, req_payload: dict, tool_name: str) -> httpx.Response:
         req_copy = req_payload.copy()
-        model = self.adaptor_dict["tool_name"]["model"]
-        port = self.adaptor_dict["tool_name"]["port"]
+        model = self.adaptor_dict[tool_name]["model"]
+        port = self.adaptor_dict[tool_name]["port"]
+        if model is None:  # sometimes the tool doesn't have a specific model because they don't have arguments
+            response = httpx.Response(200, json={
+                "id": "xxxxxxxxxxxx",  # just random id
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [{
+                            "id": "xxxxxxxxxxxx",  # just random id
+                            "type": "function",
+                            "function": {
+                                "name": tool_name,
+                                "arguments": "{}"
+                            }
+                        }],
+                    }
+                }]
+            })
+            return response
+
         req_copy["model"] = model
         url = f"http://localhost:{port}/v1/chat/completions"
         async with httpx.AsyncClient() as client:
@@ -71,7 +92,7 @@ class GPTToolAdaptor(ToolAdaptor):
                     response_tool = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["name"]
                     assert response_tool == tool_name, f"Expected tool name {tool_name}, but got {response_tool}."
             except Exception as e:
-                logger.info(f"GPTToolAdaptor: Error occurred. Tries {tries}/{max_retries}")
+                logger.error(f"GPTToolAdaptor: Error occurred. Tries {tries}/{max_retries}")
             else:
                 break
         return response
