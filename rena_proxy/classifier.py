@@ -57,7 +57,7 @@ class FinetunedClassifier(Classifier):
         req_copy["model"] = self.model
         req_copy["n"] = 10
         req_copy["temperature"] = 2.0
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=1200000.0) as client:
             response = await client.post(self.url, json=req_copy)
         if response.status_code != 200:
             logger.error(f"FinetunedClassifier Failed: {json.dumps(response.json())}")
@@ -91,7 +91,7 @@ class GPTClassifier(Classifier):
             "Content-Type": "application/json",
         }
         url = f"https://api.openai.com/v1/chat/completions"
-        async with httpx.AsyncClient(timeout=60.0, headers=headers) as client:
+        async with httpx.AsyncClient(timeout=12000000.0, headers=headers) as client:
             response = await client.post(url, json=req_copy)
         if response.status_code != 200:
             logger.error(f"GPTClassifier Failed: {json.dumps(response.json())}")

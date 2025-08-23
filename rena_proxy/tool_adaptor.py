@@ -21,14 +21,14 @@ class FinetunedToolAdaptor(ToolAdaptor):
         port = self.adaptor_dict[tool_name]["port"]
         if model is None:  # sometimes the tool doesn't have a specific model because they don't have arguments
             response = httpx.Response(200, json={
-                "id": "xxxxxxxxxxxx",  # just random id
+                "id": "xxx",  # just random id
                 "choices": [{
                     "index": 0,
                     "message": {
                         "role": "assistant",
                         "content": None,
                         "tool_calls": [{
-                            "id": "xxxxxxxxxxxx",  # just random id
+                            "id": "xxx",  # just random id
                             "type": "function",
                             "function": {
                                 "name": tool_name,
@@ -42,8 +42,19 @@ class FinetunedToolAdaptor(ToolAdaptor):
 
         req_copy["model"] = model
         url = f"http://localhost:{port}/v1/chat/completions"
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=1200000.0) as client:
             response = await client.post(url, json=req_copy)
+
+        # NOTE: vllm may generate id that is too long to feed to openai
+        # ref: https://github.com/camel-ai/camel/issues/2215
+        response_json = response.json()
+        response_json["id"] = "xxx"
+        if response_json["choices"][0]["message"].get("tool_calls"):
+            response_json["choices"][0]["message"]["tool_calls"][0]["id"] = "xxx"
+        response = httpx.Response(
+            response.status_code,
+            json=response_json
+        )
         return response
 
 class GPTToolAdaptor(ToolAdaptor):
@@ -85,7 +96,7 @@ class GPTToolAdaptor(ToolAdaptor):
             if tries > max_retries:
                 logger.error("GPToolAdaptor: Max retries exceeded")
                 raise RuntimeError("Max retries exceeded")
-            async with httpx.AsyncClient(timeout=60.0, headers=headers) as client:
+            async with httpx.AsyncClient(timeout=1200000.0, headers=headers) as client:
                 response = await client.post(url, json=req_copy)
             try:
                 if tool_name != "summarize":

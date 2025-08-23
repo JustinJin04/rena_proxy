@@ -65,6 +65,7 @@ class Proxier:
                 )
             except Exception as e:
                 logger.error(f"Error when processing request: {json.dumps(raw_req_payload)}")
+                logger.error(f"Exception occurred: {str(e)}")
                 traceback.print_exc()
                 return fastapi.responses.JSONResponse(
                     status_code=500, content={"error": str(e)}
