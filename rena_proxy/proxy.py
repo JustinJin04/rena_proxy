@@ -1,5 +1,7 @@
 import os
 import json
+import copy
+import threading
 import argparse
 from dataclasses import dataclass
 from math import inf
@@ -8,25 +10,28 @@ import fastapi
 import httpx
 import traceback
 import uvicorn
+from pathlib import Path
 
-from classifier import get_classifier
-from tool_adaptor import get_tool_adaptor
-from utils.logging_setup import setup_logging
+from .classifier import get_classifier
+from .tool_adaptor import get_tool_adaptor
+from .utils.logging_setup import setup_logging
 
 import logging
 logger = logging.getLogger(__name__)
 
+PACKAGE_ROOT = Path(__file__).resolve().parent.parent
+
 @dataclass
 class ProxyConfig:
     port: int = 8030
-    tool_cap: Optional[dict] = None  # tool_cap json or none (no tool_cap)
+    tool_cap: Optional[str] = None  # tool_cap json or none (no tool_cap)
     classifier_name_or_path: str = "gpt"  # path to classifier config or name
     tool_adaptor_name_or_path: str = "gpt"  # path to tool adaptor config or name
+    error_queries_log_path: Optional[str] = None
 
 class Proxier:
     def __init__(self, config: ProxyConfig):
         self.config = config
-
         self.app = fastapi.FastAPI()
         self._register_routes()
 
@@ -35,11 +40,56 @@ class Proxier:
                 self.config.tool_cap = json.load(f)
         self.classifier = get_classifier(config.classifier_name_or_path)
         self.tool_adaptor = get_tool_adaptor(config.tool_adaptor_name_or_path)
-    
+
+        # server相关
+        self._server = None
+        self._thread = None
+
+    def __enter__(self):
+        """启动uvicorn server (后台线程)"""
+        config = uvicorn.Config(
+            self.app,
+            host="0.0.0.0",
+            port=self.config.port,
+            log_level="info",
+        )
+        self._server = uvicorn.Server(config)
+
+        def run_server():
+            # run 会阻塞，所以放在线程里
+            import asyncio
+            asyncio.run(self._server.serve())
+
+        self._thread = threading.Thread(target=run_server, daemon=True)
+        self._thread.start()
+        logger.info(f"Proxier started at http://0.0.0.0:{self.config.port}")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """关闭server"""
+        if self._server and self._server.started:
+            self._server.should_exit = True
+        if self._thread:
+            self._thread.join(timeout=5)
+        logger.info("Proxier stopped.")
+
     def tool_cap(self, raw_req_payload: dict) -> dict:
-        req_copy = raw_req_payload.copy()
-        if self.config.tool_cap:
-            req_copy["tools"] = self.config.tool_cap["tool_cap"]
+        req_copy = copy.deepcopy(raw_req_payload)
+
+        # tool_capabilities
+        tools = req_copy["tools"]
+        tool_caps = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("tool_capabilities", {})) or {}
+        for tool in tools:
+            fn = tool.get("function")
+            name = fn.get("name")
+            cap = tool_caps.get(name)
+            if cap:
+                fn.update(copy.deepcopy(cap))
+                tool["function"] = fn
+
+        # _workflow_patterns
+        req_copy["_workflow_patterns"] = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("_workflow_patterns", [])) or []
+
         return req_copy
     
     async def classify(self, req_payload: dict) -> str:
@@ -67,33 +117,38 @@ class Proxier:
                 logger.error(f"Error when processing request: {json.dumps(raw_req_payload)}")
                 logger.error(f"Exception occurred: {str(e)}")
                 traceback.print_exc()
+                if self.config.error_queries_log_path:
+                    with open(self.config.error_queries_log_path, "a") as f:
+                        error_log = {
+                            "request": raw_req_payload,
+                            "error": str(e)
+                        }
+                        f.write(json.dumps(error_log) + "\n")
                 return fastapi.responses.JSONResponse(
                     status_code=500, content={"error": str(e)}
                 )
+                
 
+def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool, tool_adapters: bool, tool_capabilities: bool, error_queries_log_path: Optional[str] = None)->Proxier:
+    classifier_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "classifier.json") if classifier else "gpt"
+    tool_adaptor_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "tool_adaptor.json") if tool_adapters else "gpt"
+    tool_cap = str(PACKAGE_ROOT / "config" / tool_name / "tool_cap.json") if tool_capabilities else None
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, required=True)
-    parser.add_argument("--tool_cap", type=str, default=None)
-    parser.add_argument("--classifier_name_or_path", type=str, default="gpt")
-    parser.add_argument("--tool_adaptor_name_or_path", type=str, default="gpt")
-    parser.add_argument("--log_file_path", type=str, required=True)
-    args = parser.parse_args()
-
-    if not os.path.exists(os.path.dirname(args.log_file_path)):
-        os.makedirs(os.path.dirname(args.log_file_path))
-    with open(args.log_file_path, "w") as f:
+    log_file_path = str(PACKAGE_ROOT / "logs" / tool_name / f"{prompt_tuning}{classifier}{tool_adapters}{tool_capabilities}.log")
+    print(f"log_file_path: {log_file_path}")
+    with open(log_file_path, "w") as f:
         f.write("")
-    setup_logging(args.log_file_path)
+    if error_queries_log_path:
+        os.makedirs(os.path.dirname(error_queries_log_path), exist_ok=True)
+        with open(error_queries_log_path, "w") as f:
+            f.write("")
+    setup_logging(str(log_file_path))
 
     config = ProxyConfig(
-        port=args.port,
-        tool_cap=args.tool_cap,
-        classifier_name_or_path=args.classifier_name_or_path,
-        tool_adaptor_name_or_path=args.tool_adaptor_name_or_path
+        port=port,
+        classifier_name_or_path=classifier_name_or_path,
+        tool_adaptor_name_or_path=tool_adaptor_name_or_path,
+        tool_cap=tool_cap,
+        error_queries_log_path=error_queries_log_path
     )
-
-    proxier = Proxier(config)
-    uvicorn.run(proxier.app, host="0.0.0.0", port=config.port)
-
+    return Proxier(config)

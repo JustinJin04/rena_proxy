@@ -1,4 +1,5 @@
 import httpx
+import copy
 import json
 from collections import defaultdict
 from math import inf
@@ -50,10 +51,12 @@ class FinetunedClassifier(Classifier):
             for tool in self.tools:
                 if tool in content:
                     tool_names.append(tool)
+        logger.info(f"Extracted tool names: {tool_names}")
         return tool_names
 
     async def classify(self, req_payload: dict) -> str:
-        req_copy = req_payload.copy()
+        # req_copy = req_payload.copy()
+        req_copy = copy.deepcopy(req_payload)
         req_copy["model"] = self.model
         req_copy["n"] = 10
         req_copy["temperature"] = 2.0
@@ -66,25 +69,19 @@ class FinetunedClassifier(Classifier):
         return self.get_most_occurance_tool_name(response.json())
 
 class GPTClassifier(Classifier):
-    
-    def __init__(self, tools: list[str]):
-        self.tools = tools
 
     def extract_tools_from_response(self, res: dict) -> list[str]:
         message = res["choices"][0]["message"]
         if message.get("tool_calls"):
-            if message["tool_calls"][0]["function"]["name"] in self.tools:
-                return [message["tool_calls"][0]["function"]["name"]]
-            else:
-                logger.error(f"GPTClassifier Failed: {json.dumps(res)}")
-                raise ValueError("GPTClassifier Failed")
+            return [message["tool_calls"][0]["function"]["name"]]
         else:
             return ["summarize"]
 
     async def classify(self, req_payload: dict) -> str:
-        req_copy = req_payload.copy()
+        req_copy = copy.deepcopy(req_payload)
         req_copy.pop("max_tokens", None)
-        req_copy["model"] = "gpt-5-mini"
+        req_copy.pop("_workflow_patterns", None)
+        req_copy["model"] = os.environ.get("OPENAI_MODEL", "gpt-5-mini")
         api_key = os.environ.get("OPENAI_API_KEY")
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -105,21 +102,6 @@ def get_classifier(classifier_name_or_path) -> Classifier:
      - $PATH_TO_FINETUNED_CLASSIFIER_CONFIG_PATH
      """
     if classifier_name_or_path == "gpt":
-        return GPTClassifier(tools=[
-            "read_file",
-            "read_text_file",
-            "read_multiple_files",
-            "write_file",
-            "edit_file",
-            "create_directory",
-            "directory_tree",
-            "move_file",
-            "get_file_info",
-            "list_directory",
-            "list_directory_with_sizes",
-            "search_files",
-            "summarize",
-            "list_allowed_directories"
-        ])
+        return GPTClassifier()
     else:
         return FinetunedClassifier.from_json_file(classifier_name_or_path)
