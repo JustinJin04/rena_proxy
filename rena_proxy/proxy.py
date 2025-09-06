@@ -27,6 +27,7 @@ class ProxyConfig:
     tool_cap: Optional[str] = None  # tool_cap json or none (no tool_cap)
     classifier_name_or_path: str = "gpt"  # path to classifier config or name
     tool_adaptor_name_or_path: str = "gpt"  # path to tool adaptor config or name
+    tool_list: str = ""
     error_queries_log_path: Optional[str] = None
 
 class Proxier:
@@ -38,6 +39,8 @@ class Proxier:
         if self.config.tool_cap:
             with open(self.config.tool_cap, "r") as f:
                 self.config.tool_cap = json.load(f)
+        self.tool_list = json.load(open(self.config.tool_list, "r"))
+        assert isinstance(self.tool_list, list), "tool_list should be a list of tools"
         self.classifier = get_classifier(config.classifier_name_or_path)
         self.tool_adaptor = get_tool_adaptor(config.tool_adaptor_name_or_path)
 
@@ -105,9 +108,32 @@ class Proxier:
                 raw_req_payload = await request.json()
                 logger.info(f"Received request messages: {json.dumps(raw_req_payload['messages'])}")
                 req_payload = self.tool_cap(raw_req_payload)
+                
+
+
+                # Used for substitue tool names
+                req_payload["tools"] = self.tool_list
+
+
+
                 tool_name = await self.classify(req_payload)
                 logger.info(f"Classified tool name: {tool_name}")
                 response = await self.tool_adaption(req_payload, tool_name)
+
+
+
+                # used for substitute tool names
+                Substitute_tool_list = {
+                    "get_users_by_name": "list_users_and_teams"
+                }
+                response_json = response.json()
+                for tool_call in response_json["choices"][0]["message"].get("tool_calls", []):
+                    if tool_call["function"]["name"] in Substitute_tool_list:
+                        tool_call["function"]["name"] = Substitute_tool_list[tool_call["function"]["name"]]
+                response = httpx.Response(response.status_code, json=response_json)
+
+
+
                 logger.info(f"Tool adaptation response: {json.dumps(response.json())}")
                 return fastapi.responses.JSONResponse(
                     status_code=response.status_code,
@@ -133,6 +159,7 @@ def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool
     classifier_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "classifier.json") if classifier else "gpt"
     tool_adaptor_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "tool_adaptor.json") if tool_adapters else "gpt"
     tool_cap = str(PACKAGE_ROOT / "config" / tool_name / "tool_cap.json") if tool_capabilities else None
+    tool_list = str(PACKAGE_ROOT / "config" / tool_name / "tool_list.json")
 
     log_file_path = str(PACKAGE_ROOT / "logs" / tool_name / f"{prompt_tuning}{classifier}{tool_adapters}{tool_capabilities}.log")
     print(f"log_file_path: {log_file_path}")
@@ -149,6 +176,7 @@ def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool
         classifier_name_or_path=classifier_name_or_path,
         tool_adaptor_name_or_path=tool_adaptor_name_or_path,
         tool_cap=tool_cap,
+        tool_list=tool_list,
         error_queries_log_path=error_queries_log_path
     )
     return Proxier(config)

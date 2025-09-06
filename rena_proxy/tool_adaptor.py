@@ -188,6 +188,12 @@ class FinetunedToolAdaptorStrict(ToolAdaptor):
         response_json["id"] = "xxx"
         if response_json["choices"][0]["message"].get("tool_calls"):
             response_json["choices"][0]["message"]["tool_calls"][0]["id"] = "xxx"
+            for i in range(len(response_json["choices"][0]["message"]["tool_calls"])):
+                args = response_json["choices"][0]["message"]["tool_calls"][i]["function"]["arguments"]
+                while not isinstance(args, dict):
+                    args = json.loads(args)
+                response_json["choices"][0]["message"]["tool_calls"][i]["function"]["arguments"] = json.dumps(args)
+
         response = httpx.Response(
             response.status_code,
             json=response_json
