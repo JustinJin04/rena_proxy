@@ -1,6 +1,6 @@
 {
   "model": "unmask",
-  "port": 8011,
+  "port": 8010,
   "tools": [
     "get_board_items_by_name",
     "create_item",
