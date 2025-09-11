@@ -9,7 +9,6 @@
     "API-post-search",
     "API-retrieve-a-block",
     "API-retrieve-a-page",
-    "API-retrieve-a-page-property",
     "summarize"
   ]
 }

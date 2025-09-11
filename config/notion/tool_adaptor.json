@@ -27,10 +27,6 @@
     "model": "API-retrieve-a-page",
     "port": 8010
   },
-  "API-retrieve-a-page-property": {
-    "model": "API-retrieve-a-page-property",
-    "port": 8010
-  },
   "summarize": {
     "model": "unsloth/Qwen2.5-7B-Instruct",
     "port": 8010

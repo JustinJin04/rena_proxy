@@ -170,6 +170,7 @@
       }
     },
     "API-get-block-children": {
+      "description": "Read page CONTENT (blocks) via Retrieve block children. Use this when asked to read/extract/summarize what a page says. Pass the page_id as block_id to fetch the page’s root blocks. Returns text/headings/lists/toggles as blocks; paginated (<=100).",
       "extracted_capabilities": {
         "primary_actions": ["retrieve", "list", "get"],
         "targets": ["block children", "nested blocks", "block content"],
@@ -191,6 +192,7 @@
       },
       "derived_capabilities": {
         "can_do": [
+          "READ PAGE CONTENT (BLOCKS)",
           "access nested content",
           "retrieve block hierarchies",
           "paginate large content",
@@ -203,6 +205,7 @@
           "get multiple block trees"
         ],
         "best_for": [
+          "READ PAGE CONTENT (BLOCKS)",
           "content tree navigation",
           "hierarchical content access",
           "page structure analysis",
@@ -250,6 +253,7 @@
       }
     },
     "API-retrieve-a-page": {
+      "description": "Retrieve a page (PROPERTIES/METADATA ONLY — NO CONTENT). Use ONLY for properties like title, status, tags, relations, timestamps, cover/icon. Does NOT return any page text/blocks. If the user asks to read/extract/summarize what the page says or mentions 'content/blocks/text', DO NOT use this; use API-get-block-children instead.",
       "extracted_capabilities": {
         "primary_actions": ["retrieve", "get", "fetch"],
         "targets": ["page", "page properties", "page metadata"],
@@ -270,64 +274,24 @@
       },
       "derived_capabilities": {
         "can_do": [
+          "PROPERTIES/METADATA ONLY",
           "get complete page information",
           "retrieve specific properties",
           "access page metadata",
           "validate page existence"
         ],
         "cannot_do": [
-          "retrieve multiple pages",
-          "get page content blocks",
-          "modify page data",
-          "search within pages"
+          "CANNOT RETURN ANY PAGE TEXT/BLOCKS",
+          "CANNOT retrieve multiple pages",
+          "CANNOT get page content blocks",
+          "CANNOT modify page data",
+          "CANNOT search within pages"
         ],
         "best_for": [
           "page property analysis",
           "metadata extraction",
           "page validation",
           "property inspection"
-        ]
-      }
-    },
-    "API-retrieve-a-page-property": {
-      "extracted_capabilities": {
-        "primary_actions": ["retrieve", "get", "inspect"],
-        "targets": ["page property", "property value", "specific property"],
-        "features": [
-          "individual property access",
-          "pagination for large properties",
-          "detailed property inspection"
-        ],
-        "constraints": ["single property only", "requires property ID"],
-        "parameters": {
-          "required": ["page_id", "property_id"],
-          "optional": ["page_size", "start_cursor"],
-          "parameter_purposes": {
-            "page_id": "target page",
-            "property_id": "specific property",
-            "page_size": "items per page",
-            "start_cursor": "pagination cursor"
-          }
-        }
-      },
-      "derived_capabilities": {
-        "can_do": [
-          "get specific property values",
-          "handle large property datasets",
-          "paginate property items",
-          "inspect property details"
-        ],
-        "cannot_do": [
-          "retrieve multiple properties",
-          "modify property values",
-          "get property schema",
-          "search within properties"
-        ],
-        "best_for": [
-          "property analysis",
-          "large property handling",
-          "detailed property inspection",
-          "property value extraction"
         ]
       }
     }

@@ -186,39 +186,5 @@
       }
     },
     "type": "function"
-  },
-  {
-    "function": {
-      "description": "Notion | Retrieve a page property item",
-      "name": "API-retrieve-a-page-property",
-      "parameters": {
-        "$defs": {},
-        "properties": {
-          "page_id": {
-            "description": "Identifier for a Notion page",
-            "type": "string"
-          },
-          "page_size": {
-            "description": "For paginated properties. The max number of property item objects on a page. The default size is 100",
-            "format": "int32",
-            "type": "integer"
-          },
-          "property_id": {
-            "description": "Identifier for a page [property](https://developers.notion.com/reference/page#all-property-values)",
-            "type": "string"
-          },
-          "start_cursor": {
-            "description": "For paginated properties.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "page_id",
-          "property_id"
-        ],
-        "type": "object"
-      }
-    },
-    "type": "function"
   }
 ]

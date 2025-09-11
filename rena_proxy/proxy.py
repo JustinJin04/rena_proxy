@@ -89,6 +89,7 @@ class Proxier:
             if cap:
                 fn.update(copy.deepcopy(cap))
                 tool["function"] = fn
+                print(f"pppppppppproxy: {tool['function']}")
 
         # _workflow_patterns
         req_copy["_workflow_patterns"] = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("_workflow_patterns", [])) or []
@@ -106,21 +107,17 @@ class Proxier:
         async def chat_completions(request: fastapi.Request):
             try:
                 raw_req_payload = await request.json()
+                
+                # Used for substitue tool names. Note that it should be done before tool_cap
+                raw_req_payload["tools"] = self.tool_list
+                
                 logger.info(f"Received request messages: {json.dumps(raw_req_payload['messages'])}")
                 req_payload = self.tool_cap(raw_req_payload)
-                
-
-
-                # Used for substitue tool names
-                req_payload["tools"] = self.tool_list
-
-
+                logger.info(f"request tool list: {json.dumps(req_payload['tools'])}")
 
                 tool_name = await self.classify(req_payload)
                 logger.info(f"Classified tool name: {tool_name}")
                 response = await self.tool_adaption(req_payload, tool_name)
-
-
 
                 # used for substitute tool names
                 Substitute_tool_list = {
