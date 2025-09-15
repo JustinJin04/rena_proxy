@@ -121,6 +121,7 @@
       }
     },
     "API-post-search": {
+      "description": "Search for pages and databases by TITLE via Search endpoint. Use this to find pages/databases by title keywords. Supports filtering by object type (page or database), pagination (max 100 results per page), and sorting by last edited time. Does NOT support searching within page content or by properties.",
       "extracted_capabilities": {
         "primary_actions": ["search", "find", "query"],
         "targets": ["pages", "databases", "titles", "content"],
@@ -162,7 +163,7 @@
         ],
         "best_for": [
           "content discovery",
-          "finding pages by name",
+          "finding pages by title",
           "workspace exploration",
           "title-based lookups",
           "recent content finding"

@@ -61,7 +61,7 @@ class FinetunedClassifier(Classifier):
         # req_copy = req_payload.copy()
         req_copy = copy.deepcopy(req_payload)
         req_copy["model"] = self.model
-        req_copy["n"] = 10
+        req_copy["n"] = 100
         req_copy["temperature"] = 2.0
         async with httpx.AsyncClient(timeout=1200000.0) as client:
             response = await client.post(self.url, json=req_copy)

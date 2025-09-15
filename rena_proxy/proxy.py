@@ -113,7 +113,7 @@ class Proxier:
                 
                 logger.info(f"Received request messages: {json.dumps(raw_req_payload['messages'])}")
                 req_payload = self.tool_cap(raw_req_payload)
-                logger.info(f"request tool list: {json.dumps(req_payload['tools'])}")
+                # logger.info(f"request tool list: {json.dumps(req_payload['tools'])}")
 
                 tool_name = await self.classify(req_payload)
                 logger.info(f"Classified tool name: {tool_name}")
