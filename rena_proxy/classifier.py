@@ -48,13 +48,19 @@ class FinetunedClassifier(Classifier):
         tool_names = []
         for choice in res["choices"]:
             content = choice["message"]["content"]
-            tool_name = json.loads(content[len("<tool_call>"):-len("</tool_call>")])["name"]
+            try:
+                tool_name = json.loads(content[len("<tool_call>"):-len("</tool_call>")])["name"]
+            except Exception as e:
+                logger.error(f"Failed to parse tool name from content: {content}, error: {e}")
+                continue
             for tool in self.tools:
                 # BUG: if there are tools like "API-get-user" and "API-get-users", it will be matched twice
                 if tool == tool_name:
                     tool_names.append(tool)
                     break
         logger.info(f"Extracted tool names: {tool_names}")
+        if len(tool_names) == 0:
+            raise ValueError("No tool name extracted")
         return tool_names
 
     async def classify(self, req_payload: dict) -> str:

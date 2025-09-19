@@ -113,8 +113,6 @@ class Proxier:
                 
                 logger.info(f"Received request messages: {json.dumps(raw_req_payload['messages'])}")
                 req_payload = self.tool_cap(raw_req_payload)
-                # logger.info(f"request tool list: {json.dumps(req_payload['tools'])}")
-
                 tool_name = await self.classify(req_payload)
                 logger.info(f"Classified tool name: {tool_name}")
                 response = await self.tool_adaption(req_payload, tool_name)
@@ -152,16 +150,21 @@ class Proxier:
                 )
                 
 
-def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool, tool_adapters: bool, tool_capabilities: bool, error_queries_log_path: Optional[str] = None)->Proxier:
+def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool, tool_adapters: bool, tool_capabilities: bool, logging_dir: Optional[str] = None, error_queries_log_path: Optional[str] = None) -> Proxier:
     classifier_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "classifier.json") if classifier else "gpt"
     tool_adaptor_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "tool_adaptor.json") if tool_adapters else "gpt"
     tool_cap = str(PACKAGE_ROOT / "config" / tool_name / "tool_cap.json") if tool_capabilities else None
     tool_list = str(PACKAGE_ROOT / "config" / tool_name / "tool_list.json")
 
-    log_file_path = str(PACKAGE_ROOT / "logs" / tool_name / f"{prompt_tuning}{classifier}{tool_adapters}{tool_capabilities}.log")
+    if logging_dir:
+        log_file_path = str(Path(logging_dir)/ f"{prompt_tuning}{classifier}{tool_adapters}{tool_capabilities}.log")
+    else:
+        log_file_path = str(PACKAGE_ROOT / "logs" / tool_name / f"{prompt_tuning}{classifier}{tool_adapters}{tool_capabilities}.log")
+
+    os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
     print(f"log_file_path: {log_file_path}")
-    with open(log_file_path, "w") as f:
-        f.write("")
+    # with open(log_file_path, "w") as f:
+    #     f.write("")
     if error_queries_log_path:
         os.makedirs(os.path.dirname(error_queries_log_path), exist_ok=True)
         with open(error_queries_log_path, "w") as f:
