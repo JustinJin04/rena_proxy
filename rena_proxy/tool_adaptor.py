@@ -66,13 +66,13 @@ class GPTToolAdaptor(ToolAdaptor):
             for tool in tools:
                 if tool["function"]["name"] == tool_name:
                     tools = [tool]
-                    req_copy["tool_choice"] = "auto"
-                    # req_copy["tool_choice"] = {
-                    #     "type": "function",
-                    #     "function": {
-                    #         "name": tool_name
-                    #     }
-                    # }
+                    # req_copy["tool_choice"] = "auto"
+                    req_copy["tool_choice"] = {
+                        "type": "function",
+                        "function": {
+                            "name": tool_name
+                        }
+                    }
                     break
         url = f"https://api.openai.com/v1/chat/completions"
         req_copy.pop("max_tokens", None)
@@ -206,14 +206,18 @@ class FinetunedToolAdaptorStrict(ToolAdaptor):
             # ref: https://github.com/camel-ai/camel/issues/2215
             response_json = response.json()
             response_json["id"] = "xxx"
-            if response_json["choices"][0]["message"].get("tool_calls"):
-                # response_json["choices"][0]["message"]["tool_calls"][0]["id"] = "xxx"
-                for i in range(len(response_json["choices"][0]["message"]["tool_calls"])):
-                    response_json["choices"][0]["message"]["tool_calls"][i]["id"] = "xxx"
-                    args = response_json["choices"][0]["message"]["tool_calls"][i]["function"]["arguments"]
-                    while not isinstance(args, dict):
-                        args = json.loads(args)
-                    response_json["choices"][0]["message"]["tool_calls"][i]["function"]["arguments"] = json.dumps(args)
+            try:
+                if response_json["choices"][0]["message"].get("tool_calls"):
+                    # response_json["choices"][0]["message"]["tool_calls"][0]["id"] = "xxx"
+                    for i in range(len(response_json["choices"][0]["message"]["tool_calls"])):
+                        response_json["choices"][0]["message"]["tool_calls"][i]["id"] = "xxx"
+                        args = response_json["choices"][0]["message"]["tool_calls"][i]["function"]["arguments"]
+                        while not isinstance(args, dict):
+                            args = json.loads(args)
+                        response_json["choices"][0]["message"]["tool_calls"][i]["function"]["arguments"] = json.dumps(args)
+            except Exception as e:
+                logger.error(f"FinetunedToolAdaptorStrict: Failed to process response json: {response_json}, error: {e}")
+                raise e
             response = httpx.Response(
                 response.status_code,
                 json=response_json
