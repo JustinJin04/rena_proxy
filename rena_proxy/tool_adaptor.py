@@ -77,6 +77,7 @@ class GPTToolAdaptor(ToolAdaptor):
         url = f"https://api.openai.com/v1/chat/completions"
         req_copy.pop("max_tokens", None)
         req_copy.pop("_workflow_patterns", None)
+        req_copy.pop("tool_selection_guidelines", None)
         req_copy["model"] = os.environ.get("OPENAI_MODEL", "gpt-5-mini")
         req_copy["messages"] = messages
         req_copy["tools"] = tools
@@ -153,6 +154,7 @@ class FinetunedToolAdaptorStrict(ToolAdaptor):
         url = f"https://api.openai.com/v1/chat/completions"
         req_copy.pop("max_tokens", None)
         req_copy.pop("_workflow_patterns", None)
+        req_copy.pop("tool_selection_guidelines", None)
         req_copy["model"] = os.environ.get("OPENAI_MODEL", "gpt-5-mini")
         api_key = os.environ.get("OPENAI_API_KEY")
         headers = {

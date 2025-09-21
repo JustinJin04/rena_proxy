@@ -1,0 +1,1192 @@
+{
+  "tool_capabilities": {
+    "read_file": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "read",
+          "examine"
+        ],
+        "targets": [
+          "file",
+          "contents",
+          "single file"
+        ],
+        "features": [
+          "complete contents reading",
+          "partial reading with head/tail",
+          "handles various text encodings",
+          "detailed error messages"
+        ],
+        "constraints": [
+          "single file only",
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path"
+          ],
+          "optional": [
+            "head",
+            "tail"
+          ],
+          "parameter_purposes": {
+            "path": "file location",
+            "head": "first N lines",
+            "tail": "last N lines"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "read complete file contents",
+          "read first N lines",
+          "read last N lines",
+          "handle text encodings",
+          "provide error details",
+          "examine single files"
+        ],
+        "cannot_do": [
+          "read multiple files at once",
+          "search within content",
+          "modify content",
+          "filter by patterns",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "viewing complete files",
+          "previewing file starts/ends",
+          "reading configuration files",
+          "examining logs"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_read_multiple_files": [
+            "When you only need to read a single file",
+            "When you need head/tail functionality (read_multiple_files doesn't support this)",
+            "When you want to preview just the beginning or end of a large file without reading everything",
+            "When you're doing sequential file reading and want detailed error handling for each file"
+          ],
+          "vs_read_text_file": [
+            "read_file is DEPRECATED - always prefer read_text_file instead",
+            "read_text_file offers the same functionality with better implementation"
+          ]
+        },
+        "efficiency_considerations": [
+          "Less efficient than read_multiple_files for reading multiple files",
+          "More efficient for single file access with head/tail options",
+          "Better for large files when you only need partial content"
+        ],
+        "decision_criteria": [
+          "Use when reading only one file",
+          "Use when you need head/tail functionality",
+          "Use when file size is large and you only need a portion",
+          "Avoid for multiple file operations"
+        ]
+      }
+    },
+    "read_text_file": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "read",
+          "examine"
+        ],
+        "targets": [
+          "file",
+          "contents",
+          "single file"
+        ],
+        "features": [
+          "complete contents reading",
+          "partial reading with head/tail",
+          "handles various text encodings",
+          "detailed error messages",
+          "improved implementation over read_file"
+        ],
+        "constraints": [
+          "single file only",
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path"
+          ],
+          "optional": [
+            "head",
+            "tail"
+          ],
+          "parameter_purposes": {
+            "path": "file location",
+            "head": "first N lines",
+            "tail": "last N lines"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "read complete file contents",
+          "read first N lines",
+          "read last N lines",
+          "handle text encodings",
+          "provide error details",
+          "examine single files"
+        ],
+        "cannot_do": [
+          "read multiple files at once",
+          "search within content",
+          "modify content",
+          "filter by patterns",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "viewing complete files",
+          "previewing file starts/ends",
+          "reading configuration files",
+          "examining logs"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_read_file": [
+            "Always prefer read_text_file over read_file (read_file is deprecated)",
+            "Better implementation with same functionality",
+            "More reliable error handling"
+          ],
+          "vs_read_multiple_files": [
+            "When you only need to read a single file",
+            "When you need head/tail functionality (read_multiple_files doesn't support this)",
+            "When you want to preview just the beginning or end of a large file",
+            "When you need detailed error messages for a specific file"
+          ]
+        },
+        "efficiency_considerations": [
+          "Most efficient for single file reading",
+          "Better than multiple tool calls to read_multiple_files for one file",
+          "Optimal for partial file reading (head/tail)"
+        ],
+        "decision_criteria": [
+          "Default choice for single file reading",
+          "Use when you need head/tail functionality",
+          "Use when file size is large and you only need a portion",
+          "Preferred over deprecated read_file"
+        ]
+      }
+    },
+    "read_multiple_files": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "read",
+          "analyze",
+          "compare"
+        ],
+        "targets": [
+          "multiple files",
+          "files simultaneously"
+        ],
+        "features": [
+          "simultaneous reading",
+          "more efficient than sequential",
+          "returns content with path reference",
+          "continues on individual failures"
+        ],
+        "constraints": [
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "paths"
+          ],
+          "optional": [],
+          "parameter_purposes": {
+            "paths": "array of file paths"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "read multiple files simultaneously",
+          "analyze multiple files together",
+          "compare file contents",
+          "handle partial failures",
+          "return path-referenced content",
+          "improve efficiency over sequential reads"
+        ],
+        "cannot_do": [
+          "read partial files (no head/tail)",
+          "filter content",
+          "search within files",
+          "modify content",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "comparing multiple files",
+          "batch analysis",
+          "cross-file operations",
+          "efficient multi-file reading"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_read_text_file": [
+            "When you need to read 2 or more files",
+            "When comparing or analyzing multiple files together",
+            "When you need the complete contents of multiple files (no head/tail needed)",
+            "When you want to minimize the number of tool calls"
+          ],
+          "vs_multiple_read_text_file_calls": [
+            "Always prefer read_multiple_files over multiple sequential read_text_file calls",
+            "Significantly more efficient - single tool call vs multiple",
+            "Better error handling - continues even if some files fail",
+            "Returns organized results with path references"
+          ]
+        },
+        "efficiency_considerations": [
+          "Much more efficient than sequential single-file reads",
+          "Reduces total tool call count significantly",
+          "Better network utilization for remote files"
+        ],
+        "decision_criteria": [
+          "Use when reading 2+ files",
+          "Use for cross-file analysis or comparison",
+          "Use when you need complete file contents (not partial)",
+          "Choose over multiple single-file tool calls"
+        ]
+      }
+    },
+    "write_file": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "create",
+          "overwrite"
+        ],
+        "targets": [
+          "new file",
+          "existing file"
+        ],
+        "features": [
+          "create new files",
+          "completely overwrite existing",
+          "handles text encoding",
+          "no warning on overwrite"
+        ],
+        "constraints": [
+          "allowed directories only",
+          "complete overwrite only"
+        ],
+        "parameters": {
+          "required": [
+            "path",
+            "content"
+          ],
+          "optional": [],
+          "parameter_purposes": {
+            "path": "file location",
+            "content": "complete new content"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "create new files",
+          "completely replace file content",
+          "handle text encoding properly",
+          "write to any allowed path"
+        ],
+        "cannot_do": [
+          "append to existing files",
+          "make partial edits",
+          "preserve any existing content",
+          "provide overwrite warnings",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "creating new files",
+          "complete file replacement",
+          "generating fresh content",
+          "saving new data"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_edit_file": [
+            "When you want to completely replace file contents",
+            "When creating a new file from scratch",
+            "When the new content is substantially different from existing content",
+            "When you don't need to preserve any existing content",
+            "When you want to avoid the complexity of exact text matching required by edit_file"
+          ]
+        },
+        "efficiency_considerations": [
+          "More efficient for complete rewrites",
+          "Simpler than edit_file for major changes",
+          "No need to read existing content first"
+        ],
+        "decision_criteria": [
+          "Use for new file creation",
+          "Use when replacing >50% of existing content",
+          "Use when exact text matching is difficult",
+          "Use for generated content that doesn't build on existing content"
+        ]
+      }
+    },
+    "edit_file": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "edit",
+          "replace"
+        ],
+        "targets": [
+          "text file",
+          "line sequences"
+        ],
+        "features": [
+          "line-based editing",
+          "exact sequence replacement",
+          "git-style diff output",
+          "preview with dryRun"
+        ],
+        "constraints": [
+          "exact matching required",
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path",
+            "edits"
+          ],
+          "optional": [
+            "dryRun"
+          ],
+          "parameter_purposes": {
+            "path": "file to edit",
+            "edits": "array of oldText/newText pairs",
+            "dryRun": "preview changes without applying"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "make line-based edits",
+          "replace exact text sequences",
+          "preview changes before applying",
+          "return git-style diffs",
+          "make multiple edits at once",
+          "preserve surrounding content"
+        ],
+        "cannot_do": [
+          "use regex patterns",
+          "fuzzy matching",
+          "append without exact match",
+          "edit binary files",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "targeted text replacement",
+          "configuration updates",
+          "code modifications",
+          "preserving file structure"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_write_file": [
+            "When you want to preserve most of the existing content",
+            "When making targeted, specific changes to parts of a file",
+            "When you need to see what changes are being made (git-style diff)",
+            "When you want to preview changes before applying (dryRun)",
+            "When the file is large and you're only changing small portions",
+            "When maintaining file structure and only updating specific sections"
+          ]
+        },
+        "efficiency_considerations": [
+          "More efficient for small targeted changes",
+          "Preserves file structure and formatting",
+          "Better for collaborative editing scenarios"
+        ],
+        "decision_criteria": [
+          "Use when changing <50% of file content",
+          "Use when you need to preserve file structure",
+          "Use when you want to preview changes",
+          "Use for surgical edits to existing files",
+          "Choose when exact text matching is feasible"
+        ]
+      }
+    },
+    "create_directory": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "create",
+          "ensure exists"
+        ],
+        "targets": [
+          "directory",
+          "nested directories",
+          "directory structures"
+        ],
+        "features": [
+          "create single directory",
+          "create nested directories",
+          "silent success if exists",
+          "project structure setup"
+        ],
+        "constraints": [
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path"
+          ],
+          "optional": [],
+          "parameter_purposes": {
+            "path": "directory path to create"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "create new directories",
+          "create nested directory structures",
+          "ensure directories exist",
+          "succeed silently if exists",
+          "set up project structures"
+        ],
+        "cannot_do": [
+          "create files",
+          "copy directories",
+          "delete directories",
+          "set permissions",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "project setup",
+          "ensuring paths exist",
+          "creating output directories",
+          "organizing structures"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_write_file": [
+            "Use create_directory before write_file when the target directory doesn't exist",
+            "Create directory structure first, then populate with files",
+            "Essential prerequisite for organizing files into new directory structures"
+          ],
+          "vs_list_directory_operations": [
+            "Use create_directory when you need to establish structure, not just explore existing structure",
+            "Complementary to listing operations - create first, then verify with list operations"
+          ]
+        },
+        "efficiency_considerations": [
+          "Prevents file creation failures due to missing directories",
+          "Creates entire path hierarchy in one operation",
+          "Idempotent - safe to call multiple times"
+        ],
+        "decision_criteria": [
+          "Use before any file operations in new directories",
+          "Use when setting up project scaffolding",
+          "Use when organizing files into hierarchical structures",
+          "Always use when target directory path doesn't exist"
+        ]
+      }
+    },
+    "list_directory": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "list",
+          "get listing"
+        ],
+        "targets": [
+          "files and directories",
+          "specified path"
+        ],
+        "features": [
+          "detailed listing",
+          "distinguish files from directories",
+          "[FILE] and [DIR] prefixes",
+          "understand structure"
+        ],
+        "constraints": [
+          "single directory",
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path"
+          ],
+          "optional": [],
+          "parameter_purposes": {
+            "path": "directory to list"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "list directory contents",
+          "distinguish files from directories",
+          "show all items in path",
+          "understand directory structure",
+          "find files within directory"
+        ],
+        "cannot_do": [
+          "show file sizes",
+          "recursive listing",
+          "filter results",
+          "sort results",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "exploring directory contents",
+          "basic directory browsing",
+          "understanding structure",
+          "finding specific files"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_list_directory_with_sizes": [
+            "When you don't need file size information",
+            "When you want faster results (no size calculation overhead)",
+            "When you're just checking for file existence or basic structure",
+            "When sorting by size is not needed"
+          ],
+          "vs_directory_tree": [
+            "When you only need to see one directory level",
+            "When you want faster results without recursive traversal",
+            "When working with large directory hierarchies where full tree would be overwhelming",
+            "When you need simple, flat listing format"
+          ],
+          "vs_search_files": [
+            "When you want to see all contents of a specific directory",
+            "When you don't have a specific pattern to search for",
+            "When you need to browse and explore rather than find specific items"
+          ]
+        },
+        "efficiency_considerations": [
+          "Fastest directory listing option",
+          "No size calculation overhead",
+          "No recursive traversal overhead",
+          "Minimal data transfer"
+        ],
+        "decision_criteria": [
+          "Use for basic directory exploration",
+          "Use when you don't need sizes or sorting",
+          "Use when you only need single directory level",
+          "Choose for quick directory browsing"
+        ]
+      }
+    },
+    "list_directory_with_sizes": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "list",
+          "get listing with sizes"
+        ],
+        "targets": [
+          "files and directories",
+          "specified path"
+        ],
+        "features": [
+          "detailed listing with sizes",
+          "distinguish files from directories",
+          "[FILE] and [DIR] prefixes",
+          "sort by name or size"
+        ],
+        "constraints": [
+          "single directory",
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path"
+          ],
+          "optional": [
+            "sortBy"
+          ],
+          "parameter_purposes": {
+            "path": "directory to list",
+            "sortBy": "sort by 'name' or 'size'"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "list directory with sizes",
+          "sort by name or size",
+          "distinguish files from directories",
+          "show size information",
+          "identify large files"
+        ],
+        "cannot_do": [
+          "recursive listing",
+          "filter by size threshold",
+          "search by pattern",
+          "aggregate sizes",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "finding large files",
+          "disk space analysis",
+          "size-based sorting",
+          "storage management"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_list_directory": [
+            "When you need file size information",
+            "When you want to sort by size to find large files",
+            "When doing disk space analysis",
+            "When size is relevant to your task (e.g., finding files to clean up)"
+          ],
+          "vs_directory_tree": [
+            "When you need size information (directory_tree doesn't show sizes)",
+            "When you only need one directory level with detailed size info",
+            "When you want to sort by size within a specific directory"
+          ],
+          "vs_get_file_info": [
+            "When you need size info for multiple files at once",
+            "More efficient than multiple get_file_info calls",
+            "When you want to compare sizes of files in same directory"
+          ]
+        },
+        "efficiency_considerations": [
+          "More overhead than basic list_directory due to size calculation",
+          "Still more efficient than multiple get_file_info calls",
+          "Sorting capability reduces need for post-processing"
+        ],
+        "decision_criteria": [
+          "Use when file sizes are important to your task",
+          "Use when you need to identify large files",
+          "Use for disk space management tasks",
+          "Choose when sorting by size is needed"
+        ]
+      }
+    },
+    "directory_tree": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "get tree view",
+          "recursive view"
+        ],
+        "targets": [
+          "files and directories",
+          "complete hierarchy"
+        ],
+        "features": [
+          "recursive traversal",
+          "JSON structure output",
+          "includes name and type",
+          "children arrays for directories",
+          "2-space indentation"
+        ],
+        "constraints": [
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path"
+          ],
+          "optional": [],
+          "parameter_purposes": {
+            "path": "root directory for tree"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "show complete hierarchy",
+          "recursive directory traversal",
+          "output JSON structure",
+          "show nested relationships",
+          "include all subdirectories"
+        ],
+        "cannot_do": [
+          "show file sizes",
+          "filter results",
+          "limit depth",
+          "search within tree",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "visualizing project structure",
+          "understanding deep hierarchies",
+          "documenting structure",
+          "complete overview"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_list_directory": [
+            "When you need to see the complete hierarchy, not just one level",
+            "When you want to understand the full project structure",
+            "When you need to document or visualize directory relationships",
+            "When you're exploring an unfamiliar codebase or project"
+          ],
+          "vs_list_directory_with_sizes": [
+            "When hierarchical structure is more important than file sizes",
+            "When you need to see nested relationships between directories",
+            "When you want a complete overview rather than detailed size info"
+          ],
+          "vs_search_files": [
+            "When you want to see everything, not search for specific patterns",
+            "When you need to understand the organizational structure",
+            "When you want hierarchical context for where files are located"
+          ]
+        },
+        "efficiency_considerations": [
+          "More comprehensive but slower than single-level listings",
+          "Can be overwhelming for very large directory structures",
+          "Provides complete picture in one tool call vs multiple list_directory calls"
+        ],
+        "decision_criteria": [
+          "Use when you need to understand complete project structure",
+          "Use for documentation or visualization purposes",
+          "Use when exploring unfamiliar directory hierarchies",
+          "Choose when hierarchical relationships are important"
+        ]
+      }
+    },
+    "move_file": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "move",
+          "rename"
+        ],
+        "targets": [
+          "files",
+          "directories"
+        ],
+        "features": [
+          "move between directories",
+          "rename in place",
+          "move and rename combined",
+          "fails if destination exists"
+        ],
+        "constraints": [
+          "destination must not exist",
+          "both paths in allowed directories"
+        ],
+        "parameters": {
+          "required": [
+            "source",
+            "destination"
+          ],
+          "optional": [],
+          "parameter_purposes": {
+            "source": "current location",
+            "destination": "new location or name"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "move files between directories",
+          "rename files or directories",
+          "combine move and rename",
+          "work with files and directories"
+        ],
+        "cannot_do": [
+          "overwrite existing destination",
+          "copy instead of move",
+          "batch operations",
+          "merge directories",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "file reorganization",
+          "renaming operations",
+          "directory restructuring",
+          "archiving files"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_write_file_then_delete": [
+            "More efficient than copying content and deleting original",
+            "Preserves file metadata and permissions",
+            "Atomic operation - either succeeds completely or fails completely",
+            "No risk of data loss from incomplete copy operations"
+          ],
+          "vs_create_directory_then_operations": [
+            "Can move entire directory structures in one operation",
+            "More efficient than creating new structure and copying files individually"
+          ]
+        },
+        "efficiency_considerations": [
+          "Very efficient - just updates file system pointers",
+          "Much faster than copy + delete operations",
+          "Preserves file system metadata"
+        ],
+        "decision_criteria": [
+          "Use for reorganizing file structures",
+          "Use when renaming files or directories",
+          "Use when relocating files without duplication",
+          "Choose when you want to preserve original file metadata"
+        ]
+      }
+    },
+    "search_files": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "search",
+          "find"
+        ],
+        "targets": [
+          "files and directories",
+          "matching pattern"
+        ],
+        "features": [
+          "recursive search",
+          "case-insensitive",
+          "partial name matching",
+          "returns full paths",
+          "exclude patterns support"
+        ],
+        "constraints": [
+          "name-based only",
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path",
+            "pattern"
+          ],
+          "optional": [
+            "excludePatterns"
+          ],
+          "parameter_purposes": {
+            "path": "starting directory",
+            "pattern": "search pattern",
+            "excludePatterns": "patterns to exclude"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "recursive pattern search",
+          "case-insensitive matching",
+          "partial name matching",
+          "search all subdirectories",
+          "exclude certain patterns",
+          "find files by name pattern"
+        ],
+        "cannot_do": [
+          "search by file size",
+          "search by content",
+          "search by date modified",
+          "limit search depth",
+          "search by file type beyond name"
+        ],
+        "best_for": [
+          "finding files by name",
+          "locating files in deep hierarchies",
+          "pattern-based discovery",
+          "finding lost files"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_list_directory": [
+            "When you're looking for specific files by name pattern",
+            "When you need to search recursively through subdirectories",
+            "When you know part of the filename but not the exact location",
+            "When you want to find all instances of a pattern across multiple directories"
+          ],
+          "vs_directory_tree": [
+            "When you're looking for specific files, not trying to understand structure",
+            "When you want filtered results based on name patterns",
+            "When the directory hierarchy is too large to browse manually"
+          ],
+          "vs_multiple_list_directory_calls": [
+            "Much more efficient than manually traversing directories",
+            "Searches all subdirectories in one operation",
+            "Supports pattern matching and exclusions"
+          ]
+        },
+        "efficiency_considerations": [
+          "More efficient than manual directory traversal",
+          "Can search very deep hierarchies quickly",
+          "Exclude patterns help focus results and improve performance"
+        ],
+        "decision_criteria": [
+          "Use when you know part of a filename but not its location",
+          "Use when searching for files matching specific patterns",
+          "Use when you need to find all instances of similarly named files",
+          "Choose when location is unknown but naming pattern is known"
+        ]
+      }
+    },
+    "get_file_info": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "retrieve metadata",
+          "get information"
+        ],
+        "targets": [
+          "file or directory",
+          "single item"
+        ],
+        "features": [
+          "comprehensive metadata",
+          "size information",
+          "timestamps (creation, modified)",
+          "permissions",
+          "type identification"
+        ],
+        "constraints": [
+          "single item only",
+          "allowed directories only"
+        ],
+        "parameters": {
+          "required": [
+            "path"
+          ],
+          "optional": [],
+          "parameter_purposes": {
+            "path": "file or directory to inspect"
+          }
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "get file/directory metadata",
+          "retrieve size information",
+          "check timestamps",
+          "view permissions",
+          "identify item type",
+          "understand file characteristics"
+        ],
+        "cannot_do": [
+          "get multiple items info",
+          "read file content",
+          "modify metadata",
+          "search for files",
+          "work outside allowed directories"
+        ],
+        "best_for": [
+          "checking file properties",
+          "verifying timestamps",
+          "size inspection",
+          "metadata analysis"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_list_directory_with_sizes": [
+            "When you need detailed metadata for a specific file (timestamps, permissions)",
+            "When you need more than just size information",
+            "When working with a single file rather than browsing directory contents",
+            "When you need precise metadata for verification or debugging"
+          ],
+          "vs_read_text_file": [
+            "When you need to check file properties without reading the content",
+            "When you want to verify file exists and get its characteristics",
+            "When file might be binary or very large and you only need metadata",
+            "When checking timestamps or permissions is more important than content"
+          ]
+        },
+        "efficiency_considerations": [
+          "Much faster than reading file content when you only need metadata",
+          "Less efficient than list_directory_with_sizes for multiple files in same directory",
+          "Provides most comprehensive metadata in single call"
+        ],
+        "decision_criteria": [
+          "Use when you need detailed metadata for specific files",
+          "Use when verifying file properties without reading content",
+          "Use when timestamps or permissions are important",
+          "Choose when you need to confirm file characteristics before processing"
+        ]
+      }
+    },
+    "list_allowed_directories": {
+      "extracted_capabilities": {
+        "primary_actions": [
+          "list",
+          "returns"
+        ],
+        "targets": [
+          "allowed directories",
+          "accessible directories"
+        ],
+        "features": [
+          "show access boundaries",
+          "list available directories",
+          "understand permissions"
+        ],
+        "constraints": [
+          "read-only information"
+        ],
+        "parameters": {
+          "required": [],
+          "optional": [],
+          "parameter_purposes": {}
+        }
+      },
+      "derived_capabilities": {
+        "can_do": [
+          "list allowed directories",
+          "show access boundaries",
+          "verify available paths",
+          "understand workspace limits"
+        ],
+        "cannot_do": [
+          "modify access rights",
+          "request new permissions",
+          "access unlisted directories",
+          "check subdirectory permissions"
+        ],
+        "best_for": [
+          "initial exploration",
+          "understanding boundaries",
+          "verifying access",
+          "debugging permission issues"
+        ]
+      },
+      "usage_differentiation": {
+        "when_to_use_instead_of_alternatives": {
+          "vs_list_directory": [
+            "Use first to understand what directories you can access",
+            "Use when getting permission errors to verify available paths",
+            "Use as starting point before any other directory operations",
+            "Essential for understanding the workspace scope"
+          ],
+          "vs_any_other_file_operation": [
+            "Always use first when starting work in a new environment",
+            "Use when encountering permission errors to debug access issues",
+            "Use to establish the boundaries of your workspace before planning operations"
+          ]
+        },
+        "efficiency_considerations": [
+          "Very fast operation with minimal overhead",
+          "Should be used early to avoid failed operations due to permission issues",
+          "Prevents wasted time trying to access restricted paths"
+        ],
+        "decision_criteria": [
+          "Use as first step in new environments",
+          "Use when debugging permission issues",
+          "Use when you need to understand workspace boundaries",
+          "Essential for establishing operational scope"
+        ]
+      }
+    }    
+  },
+  "tool_selection_guidelines": {
+    "efficiency_patterns": {
+      "single_file_operations": {
+        "reading": [
+          "Use read_text_file (not deprecated read_file)",
+          "Use head/tail parameters for large files when you only need portions",
+          "Prefer read_text_file over read_multiple_files for single files"
+        ],
+        "writing": [
+          "Use write_file for new files or complete replacements",
+          "Use edit_file for targeted changes to existing files",
+          "Consider edit_file with dryRun to preview changes first"
+        ]
+      },
+      "multiple_file_operations": {
+        "reading": [
+          "Always use read_multiple_files instead of multiple read_text_file calls",
+          "Significantly reduces tool call count and improves efficiency",
+          "Better error handling with partial failure support"
+        ],
+        "organization": [
+          "Use search_files to locate files by pattern across directories",
+          "Use move_file for reorganization instead of copy+delete patterns",
+          "Use create_directory before file operations in new paths"
+        ]
+      },
+      "directory_exploration": {
+        "basic_browsing": [
+          "Use list_directory for quick, simple directory browsing",
+          "Use list_directory_with_sizes when file sizes matter",
+          "Use directory_tree for complete hierarchical understanding"
+        ],
+        "targeted_search": [
+          "Use search_files when you know naming patterns but not locations",
+          "Use get_file_info for detailed metadata of specific items",
+          "Use list_allowed_directories first in new environments"
+        ]
+      }
+    },
+    "decision_trees": {
+      "file_reading_decision": {
+        "questions": [
+          "How many files do you need to read?",
+          "Do you need the complete content or just a portion?",
+          "Are you comparing or analyzing multiple files together?"
+        ],
+        "decision_logic": {
+          "single_file": {
+            "complete_content": "read_text_file",
+            "partial_content": "read_text_file with head/tail",
+            "large_file_preview": "read_text_file with head parameter"
+          },
+          "multiple_files": {
+            "any_scenario": "read_multiple_files",
+            "avoid": "multiple read_text_file calls"
+          }
+        }
+      },
+      "file_writing_decision": {
+        "questions": [
+          "Are you creating a new file or modifying existing?",
+          "How much of the existing content do you want to preserve?",
+          "Do you need to preview changes before applying?"
+        ],
+        "decision_logic": {
+          "new_file": "write_file",
+          "complete_replacement": "write_file",
+          "major_changes": "write_file (>50% content change)",
+          "targeted_changes": "edit_file",
+          "preview_needed": "edit_file with dryRun=true",
+          "preserve_structure": "edit_file"
+        }
+      },
+      "directory_exploration_decision": {
+        "questions": [
+          "Do you need size information?",
+          "Do you need to see subdirectories?",
+          "Are you looking for specific files or browsing?"
+        ],
+        "decision_logic": {
+          "basic_browsing": "list_directory",
+          "need_sizes": "list_directory_with_sizes",
+          "need_hierarchy": "directory_tree",
+          "searching_patterns": "search_files",
+          "detailed_metadata": "get_file_info",
+          "new_environment": "list_allowed_directories first"
+        }
+      }
+    },
+    "anti_patterns": {
+      "avoid_these_combinations": [
+        {
+          "pattern": "Multiple sequential read_text_file calls",
+          "instead_use": "Single read_multiple_files call",
+          "why": "Much more efficient, better error handling, organized results"
+        },
+        {
+          "pattern": "Using read_file instead of read_text_file",
+          "instead_use": "read_text_file",
+          "why": "read_file is deprecated, read_text_file has better implementation"
+        },
+        {
+          "pattern": "write_file for small targeted changes",
+          "instead_use": "edit_file",
+          "why": "Preserves file structure, shows changes, allows preview"
+        },
+        {
+          "pattern": "Manual directory traversal with multiple list_directory calls",
+          "instead_use": "search_files or directory_tree",
+          "why": "More efficient, comprehensive results in fewer tool calls"
+        },
+        {
+          "pattern": "Multiple get_file_info calls for files in same directory",
+          "instead_use": "list_directory_with_sizes",
+          "why": "Gets size info for all files in one call"
+        }
+      ]
+    }
+  }
+}

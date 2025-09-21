@@ -90,6 +90,7 @@ class GPTClassifier(Classifier):
         req_copy = copy.deepcopy(req_payload)
         req_copy.pop("max_tokens", None)
         req_copy.pop("_workflow_patterns", None)
+        req_copy.pop("tool_selection_guidelines", None)
         req_copy["model"] = os.environ.get("OPENAI_MODEL", "gpt-5-mini")
         api_key = os.environ.get("OPENAI_API_KEY")
         headers = {

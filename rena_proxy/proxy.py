@@ -93,6 +93,7 @@ class Proxier:
 
         # _workflow_patterns
         req_copy["_workflow_patterns"] = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("_workflow_patterns", [])) or []
+        req_copy["tool_selection_guidelines"] = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("tool_selection_guidelines", "")) or ""
 
         return req_copy
     
@@ -153,7 +154,7 @@ class Proxier:
 def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool, tool_adapters: bool, tool_capabilities: bool, logging_dir: Optional[str] = None, error_queries_log_path: Optional[str] = None) -> Proxier:
     classifier_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "classifier.json") if classifier else "gpt"
     tool_adaptor_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "tool_adaptor.json") if tool_adapters else "gpt"
-    tool_cap = str(PACKAGE_ROOT / "config" / tool_name / "tool_cap.json") if tool_capabilities else None
+    tool_cap = str(PACKAGE_ROOT / "config" / tool_name / "tool_cap_augmented.json") if tool_capabilities else None
     tool_list = str(PACKAGE_ROOT / "config" / tool_name / "tool_list.json")
 
     if logging_dir:
