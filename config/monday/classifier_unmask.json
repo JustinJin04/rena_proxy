@@ -1,5 +1,5 @@
-  {
-  "model": "monday_refinetuned",
+{
+  "model": "unmask",
   "port": 8010,
   "tools": [
     "get_board_items_by_name",

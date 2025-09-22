@@ -114,6 +114,7 @@ class Proxier:
                 
                 logger.info(f"Received request messages: {json.dumps(raw_req_payload['messages'])}")
                 req_payload = self.tool_cap(raw_req_payload)
+                logger.info(f"toolcap: {json.dumps(req_payload['tools'])}")
                 tool_name = await self.classify(req_payload)
                 logger.info(f"Classified tool name: {tool_name}")
                 response = await self.tool_adaption(req_payload, tool_name)
@@ -150,7 +151,6 @@ class Proxier:
                     status_code=500, content={"error": str(e)}
                 )
                 
-
 def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool, tool_adapters: bool, tool_capabilities: bool, logging_dir: Optional[str] = None, error_queries_log_path: Optional[str] = None) -> Proxier:
     classifier_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "classifier.json") if classifier else "gpt"
     tool_adaptor_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "tool_adaptor.json") if tool_adapters else "gpt"
@@ -181,3 +181,31 @@ def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool
         error_queries_log_path=error_queries_log_path
     )
     return Proxier(config)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tool_name", type=str)
+    parser.add_argument("prompt_tuning", type=int, choices=[0, 1])
+    parser.add_argument("classifier", type=int, choices=[0, 1])
+    parser.add_argument("tool_adapters", type=int, choices=[0, 1])
+    parser.add_argument("tool_cap", type=int, choices=[0, 1])
+    parser.add_argument("--port", type=int, default=8030, help="Port to run the proxy server on.")
+    parser.add_argument("--logging_dir", type=str, default=None, help="Directory to save logs. If not set, logs will be saved in the default logs directory.")
+    parser.add_argument("--error_queries_log_path", type=str, default=None, help="Path to save error queries log. If not set, error queries will not be logged.")
+    args = parser.parse_args()
+
+    with start_proxy(
+        port=args.port,
+        tool_name=args.tool_name,
+        prompt_tuning=args.prompt_tuning,
+        classifier=args.classifier,
+        tool_adapters=args.tool_adapters,
+        tool_capabilities=args.tool_cap,
+        logging_dir=args.logging_dir,
+        error_queries_log_path=args.error_queries_log_path
+    ) as proxier:
+        try:
+            while True:
+                pass
+        except KeyboardInterrupt:
+            print("Shutting down proxy server...")
