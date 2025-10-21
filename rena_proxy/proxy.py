@@ -19,16 +19,14 @@ from .utils.logging_setup import setup_logging
 import logging
 logger = logging.getLogger(__name__)
 
-PACKAGE_ROOT = Path(__file__).resolve().parent.parent
+PACKAGE_ROOT = Path(__file__).parent.parent
 
 @dataclass
 class ProxyConfig:
     port: int = 8030
-    tool_cap: Optional[str] = None  # tool_cap json or none (no tool_cap)
+    tool_list: str = ""
     classifier_name_or_path: str = "gpt"  # path to classifier config or name
     tool_adaptor_name_or_path: str = "gpt"  # path to tool adaptor config or name
-    tool_list: str = ""
-    error_queries_log_path: Optional[str] = None
 
 class Proxier:
     def __init__(self, config: ProxyConfig):
@@ -36,9 +34,6 @@ class Proxier:
         self.app = fastapi.FastAPI()
         self._register_routes()
 
-        if self.config.tool_cap:
-            with open(self.config.tool_cap, "r") as f:
-                self.config.tool_cap = json.load(f)
         self.tool_list = json.load(open(self.config.tool_list, "r"))
         assert isinstance(self.tool_list, list), "tool_list should be a list of tools"
         self.classifier = get_classifier(config.classifier_name_or_path)
@@ -75,27 +70,6 @@ class Proxier:
         if self._thread:
             self._thread.join(timeout=5)
         logger.info("Proxier stopped.")
-
-    def tool_cap(self, raw_req_payload: dict) -> dict:
-        req_copy = copy.deepcopy(raw_req_payload)
-
-        # tool_capabilities
-        tools = req_copy["tools"]
-        tool_caps = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("tool_capabilities", {})) or {}
-        for tool in tools:
-            fn = tool.get("function")
-            name = fn.get("name")
-            cap = tool_caps.get(name)
-            if cap:
-                fn.update(copy.deepcopy(cap))
-                tool["function"] = fn
-                print(f"pppppppppproxy: {tool['function']}")
-
-        # _workflow_patterns
-        req_copy["_workflow_patterns"] = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("_workflow_patterns", [])) or []
-        req_copy["tool_selection_guidelines"] = (getattr(self.config, "tool_cap", None) and self.config.tool_cap.get("tool_selection_guidelines", "")) or ""
-
-        return req_copy
     
     async def classify(self, req_payload: dict) -> str:
         return await self.classifier.classify(req_payload)
@@ -107,14 +81,12 @@ class Proxier:
         @self.app.post("/v1/chat/completions")
         async def chat_completions(request: fastapi.Request):
             try:
-                raw_req_payload = await request.json()
+                req_payload = await request.json()
                 
                 # Used for substitue tool names. Note that it should be done before tool_cap
-                raw_req_payload["tools"] = self.tool_list
+                req_payload["tools"] = self.tool_list
                 
-                logger.info(f"Received request messages: {json.dumps(raw_req_payload['messages'])}")
-                req_payload = self.tool_cap(raw_req_payload)
-                logger.info(f"toolcap: {json.dumps(req_payload['tools'])}")
+                logger.info(f"Received request messages: {json.dumps(req_payload['messages'])}")
                 tool_name = await self.classify(req_payload)
                 logger.info(f"Classified tool name: {tool_name}")
                 response = await self.tool_adaption(req_payload, tool_name)
@@ -128,8 +100,6 @@ class Proxier:
                     if tool_call["function"]["name"] in Substitute_tool_list:
                         tool_call["function"]["name"] = Substitute_tool_list[tool_call["function"]["name"]]
                 response = httpx.Response(response.status_code, json=response_json)
-
-
 
                 logger.info(f"Tool adaptation response: {json.dumps(response.json())}")
                 return fastapi.responses.JSONResponse(
@@ -150,35 +120,28 @@ class Proxier:
                 return fastapi.responses.JSONResponse(
                     status_code=500, content={"error": str(e)}
                 )
-                
-def start_proxy(port: int, tool_name: str, prompt_tuning: bool, classifier: bool, tool_adapters: bool, tool_capabilities: bool, logging_dir: Optional[str] = None, error_queries_log_path: Optional[str] = None) -> Proxier:
-    classifier_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "classifier.json") if classifier else "gpt"
-    tool_adaptor_name_or_path = str(PACKAGE_ROOT / "config" / tool_name / "tool_adaptor.json") if tool_adapters else "gpt"
-    tool_cap = str(PACKAGE_ROOT / "config" / tool_name / "tool_cap.json") if tool_capabilities else None
-    tool_list = str(PACKAGE_ROOT / "config" / tool_name / "tool_list.json")
+       
+def start_proxy(
+    port: int, 
+    category: str, 
+    tool_list: str,
+    classifier: Optional[str] = None, 
+    tool_adapters: Optional[str] = None,
+) -> Proxier:
+    classifier_name_or_path = classifier if classifier else "gpt"
+    tool_adaptor_name_or_path = tool_adapters if tool_adapters else "gpt"
 
-    if logging_dir:
-        log_file_path = str(Path(logging_dir)/ f"{prompt_tuning}{classifier}{tool_adapters}{tool_capabilities}.log")
-    else:
-        log_file_path = str(PACKAGE_ROOT / "logs" / tool_name / f"{prompt_tuning}{classifier}{tool_adapters}{tool_capabilities}.log")
+    log_file_path = str(PACKAGE_ROOT / "logs" / category / f"{int(classifier is not None)}_{int(tool_adapters is not None)}.log")
 
     os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
     print(f"log_file_path: {log_file_path}")
-    # with open(log_file_path, "w") as f:
-    #     f.write("")
-    if error_queries_log_path:
-        os.makedirs(os.path.dirname(error_queries_log_path), exist_ok=True)
-        with open(error_queries_log_path, "w") as f:
-            f.write("")
     setup_logging(str(log_file_path))
 
     config = ProxyConfig(
         port=port,
+        tool_list=tool_list,
         classifier_name_or_path=classifier_name_or_path,
         tool_adaptor_name_or_path=tool_adaptor_name_or_path,
-        tool_cap=tool_cap,
-        tool_list=tool_list,
-        error_queries_log_path=error_queries_log_path
     )
     return Proxier(config)
 
