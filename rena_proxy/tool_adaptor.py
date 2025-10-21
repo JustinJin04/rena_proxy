@@ -78,6 +78,8 @@ class GPTToolAdaptor(ToolAdaptor):
         req_copy.pop("max_tokens", None)
         req_copy.pop("_workflow_patterns", None)
         req_copy.pop("tool_selection_guidelines", None)
+        req_copy.pop("stream", None)
+        req_copy.pop("stream_options", None)
         req_copy["model"] = os.environ.get("OPENAI_MODEL", "gpt-5-mini")
         req_copy["messages"] = messages
         req_copy["tools"] = tools
@@ -167,6 +169,8 @@ class FinetunedToolAdaptorStrict(ToolAdaptor):
 
     async def adapt(self, req_payload: dict, tool_name: str) -> httpx.Response:
         req_copy = copy.deepcopy(req_payload)
+        req_copy.pop("stream", None)
+        req_copy.pop("stream_options", None)
         # if tool_name == "summarize":  # call gpt directly for summarization
         #     req_copy["messages"].append({
         #         "role": "user",

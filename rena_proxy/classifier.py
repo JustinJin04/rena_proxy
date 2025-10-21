@@ -67,14 +67,18 @@ class FinetunedClassifier(Classifier):
         # req_copy = req_payload.copy()
         req_copy = copy.deepcopy(req_payload)
         req_copy["model"] = self.model
-        req_copy["n"] = 100
-        req_copy["temperature"] = 2.0
+        req_copy["n"] = 10
+        req_copy["temperature"] = 1.0
+        req_copy.pop("stream", None)
+        req_copy.pop("stream_options", None)
         async with httpx.AsyncClient(timeout=1200000.0) as client:
             response = await client.post(self.url, json=req_copy)
         if response.status_code != 200:
             logger.error(f"FinetunedClassifier Failed: {json.dumps(response.json())}")
             raise ValueError("FinetunedClassifier Failed")
 
+        # logger.info(f"FinetunedClassifier response: {response}")
+        print(f"response: {response}")
         return self.get_most_occurance_tool_name(response.json())
 
 class GPTClassifier(Classifier):
@@ -91,6 +95,8 @@ class GPTClassifier(Classifier):
         req_copy.pop("max_tokens", None)
         req_copy.pop("_workflow_patterns", None)
         req_copy.pop("tool_selection_guidelines", None)
+        req_copy.pop("stream", None)
+        req_copy.pop("stream_options", None)
         req_copy["model"] = os.environ.get("OPENAI_MODEL", "gpt-5-mini")
         api_key = os.environ.get("OPENAI_API_KEY")
         headers = {
