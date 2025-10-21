@@ -147,25 +147,19 @@ def start_proxy(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("tool_name", type=str)
-    parser.add_argument("prompt_tuning", type=int, choices=[0, 1])
-    parser.add_argument("classifier", type=int, choices=[0, 1])
-    parser.add_argument("tool_adapters", type=int, choices=[0, 1])
-    parser.add_argument("tool_cap", type=int, choices=[0, 1])
+    parser.add_argument("--category", type=str)
+    parser.add_argument("--classifier", type=str, default=None)
+    parser.add_argument("--tool_adapters", type=str, default=None)
+    parser.add_argument("--tool_list", type=str, required=True)
     parser.add_argument("--port", type=int, default=8030, help="Port to run the proxy server on.")
-    parser.add_argument("--logging_dir", type=str, default=None, help="Directory to save logs. If not set, logs will be saved in the default logs directory.")
-    parser.add_argument("--error_queries_log_path", type=str, default=None, help="Path to save error queries log. If not set, error queries will not be logged.")
     args = parser.parse_args()
 
     with start_proxy(
         port=args.port,
-        tool_name=args.tool_name,
-        prompt_tuning=args.prompt_tuning,
+        category=args.category,
+        tool_list=args.tool_list,
         classifier=args.classifier,
         tool_adapters=args.tool_adapters,
-        tool_capabilities=args.tool_cap,
-        logging_dir=args.logging_dir,
-        error_queries_log_path=args.error_queries_log_path
     ) as proxier:
         try:
             while True:
